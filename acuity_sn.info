@@ -1,7 +1,5 @@
-name = Acuity Serial Number Generator
-description = Generates atomic, auto-incrementing serial numbers. Apply to
-custom Text fields via a widget OR set to automatically populate the Node
-Title of individual content types.
+name = Serial Number Generator (Acuity Utils)
+description = Generates atomic, auto-incrementing serial numbers. Apply to custom Text fields via a widget OR set to automatically populate the Node Title of individual content types.
 
 type = module
 backdrop = 1.x
