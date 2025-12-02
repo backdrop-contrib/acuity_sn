@@ -18,10 +18,16 @@ Next planned features:
 - Initial working version - still has issues.
 
 #1.1.1
-- this is a stand alone module so moved the menu to it's own menu item under acuity-utils
+- This is a standalone module, moved the menu to its own menu item under acuity-utils
 - Tidied up menus
 - Fixed adding serial number to "title" field.
 
 #1.1.2 - 2nd Dec 2025
 - Added help page
-- Update readme and info files with a fuller description
+- Update the read-me and info files with a fuller description
+
+#1.2.0 - 2nd Dec 2025
+- initial release
+
+#1.2.1 - 2nd Dec 2025
+- Updated readme to add Acuity brand definition
