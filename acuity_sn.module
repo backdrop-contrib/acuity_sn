@@ -131,6 +131,11 @@ function acuity_sn_form_alter(&$form, &$form_state, $form_id) {
       // Remove the required marker since we are automating it.
       $form['title']['#required'] = FALSE;
 
+      // APPLY READONLY TO BOTH NEW AND EXISTING NODES
+      $form['title']['#attributes']['readonly'] = 'readonly';
+      // Add visual style for "read-only/auto" feel.
+      $form['title']['#attributes']['style'] = 'color: red; font-style: italic;';
+
       if ($is_new) {
         // Calculate the preview value.
         $preview = '';
@@ -142,11 +147,8 @@ function acuity_sn_form_alter(&$form, &$form_state, $form_id) {
           $preview = acuity_sn_format_number($all[$group_id], $next);
         }
 
-        // Set the preview as default value and make it read-only.
+        // Set the preview as default value.
         $form['title']['#default_value'] = $preview;
-        $form['title']['#attributes']['readonly'] = 'readonly';
-        // Add visual style for "read-only/auto" feel.
-        $form['title']['#attributes']['style'] = 'color: red; font-style: italic;';
 
         $form['title']['#description'] = '<span class="abms-sn-provisional-msg">' .
           t('This is a provisional number and may change if other content is saved first.') .
@@ -154,7 +156,7 @@ function acuity_sn_form_alter(&$form, &$form_state, $form_id) {
       }
       else {
         // On edit, we keep the existing title.
-        $form['title']['#description'] = t('Assigned Serial Group: @group', ['@group' => $group_id]);
+        $form['title']['#description'] = t('Assigned Serial Group: @group (Locked)', ['@group' => $group_id]);
       }
     }
   }

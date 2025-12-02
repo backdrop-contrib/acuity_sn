@@ -32,3 +32,4 @@ Next planned features:
 #1.2.1 - 2nd Dec 2025
 - Updated readme to add Acuity brand definition
 - Renamed title of module to Serial Number Generator (Acuity Utils)
+- Corrected functionality which allowed node title's to be edited... change to read only (locked) for consistancy.
