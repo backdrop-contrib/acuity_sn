@@ -66,7 +66,7 @@ This module assigns numbers to new content going forward. It does not retroactiv
 
 **Recommendation:** Configure the Serial Number Group's **Next number** to be greater than your highest existing manual serial number to avoid conflicts.
 
-**API**
+## **API**
 ***NOTE: The API is a work-in-progress... Please contact the developer before using the API in production.***
 
 You can request a serial number programmatically using the following function:
