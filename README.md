@@ -36,8 +36,8 @@ Enable the module.
 Visit the admin page at /admin/config/acuity-utils/acuity_sn
 
 Configuration
- └ Acuity utils
-  └ Serial number settings
+ .. Acuity utils
+  ... Serial number settings
 
 Set options for: -
 
