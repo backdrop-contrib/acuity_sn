@@ -30,4 +30,8 @@ Next planned features:
 - initial release
 
 #1.2.1 - 2nd Dec 2025
+<<<<<<< Updated upstream
 - Updated readme to add Acuity brand definition
+=======
+- Updated readme to add Acuity brand definition
+>>>>>>> Stashed changes

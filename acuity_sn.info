@@ -6,7 +6,7 @@ Title of individual content types.
 type = module
 backdrop = 1.x
 package = Acuity Utilities
-;version = 1.2.0
+;version = 1.2.1
 
 configure = admin/config/acuity-utils/
 
