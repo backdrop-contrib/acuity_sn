@@ -1,4 +1,4 @@
-# Acuity Serial Number Generator
+# Serial Number Generator (Auity Utils)
 A flexible, standalone module that provides atomic, auto-incrementing serial number generation.
 
 This module allows you to generate sequential serial numbers and:
