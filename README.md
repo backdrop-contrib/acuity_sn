@@ -5,6 +5,9 @@ This module allows you to generate sequential serial numbers and:
 * **Add them to Content Titles:** Automatically populate the Title field of specific content types.
 * **Add them to Text Fields:** Define custom *Text (short)* fields and apply the serial number via the "Auto serial number" widget.
 
+# About **Acuity**
+Acuity is a branding 
+
 **How it works:**
 To prevent duplicates (race conditions), the serial number field shows the *next available* serial number on the data entry screen as a **read-only** field. This displayed number is provisional (an indication of what is available when the page loads); the module will lock and assign the next available atomic number when the content is actually **saved**.
 
@@ -80,12 +83,15 @@ Implement `hook_acuity_sn_info()` in your module to define serial groups.
 
 Bugs and Feature requests should be reported in the Issue Queue: https://github.com/backdrop-contrib/acuity_sn/issues
 
+## About our "Acuity" Brand
+"Acuity" is the namespace used by Albany Computer Services to organise our collection of modules and utilities. We group these tools under a unified brand to streamline installation and make it easier for site maintainers to identify our suite of developed solutions. While part of this larger family, this module is a standalone utility.
+
 ## Current Maintainer(s):
 - Steve Moorhouse (albanycomputers) (https://github.com/albanycomputers)
 - Seeking additional maintainers and contributors.
 
 ## Credits:
-
+- Steve Moorhouse - Zulip (DrAlbany)
 - Google Gemini 3.0 assisted with the coding of this module.
 
 ## Sponsorship:
