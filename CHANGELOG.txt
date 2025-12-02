@@ -9,3 +9,19 @@ Next planned features:
 - Lock-safe generator function with jitter retry
 - Format helper
 - Admin config form for serial management
+
+
+#v1.0.8
+- Create test for API usage
+
+#v1.1.0
+- Initial working version - still has issues.
+
+#1.1.1
+- this is a stand alone module so moved the menu to it's own menu item under acuity-utils
+- Tidied up menus
+- Fixed adding serial number to "title" field.
+
+#1.1.2 - 2nd Dec 2025
+- Added help page
+- Update readme and info files with a fuller description

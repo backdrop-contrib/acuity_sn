@@ -3,6 +3,8 @@
 /**
  * @file
  * Hooks provided by the Acuity Serial Number Generator module.
+ *
+ * file: acuity_sn.api.inc
  */
 
 /**
@@ -15,7 +17,6 @@
  *
  * 3. Call acuity_sn_register_discovered_groups() to persist them
  */
-
 
 /**
  * Declare serial number groups provided by your module.
@@ -109,5 +110,3 @@ function acuity_sn_register_discovered_groups() {
 
   return $added;
 }
-
-

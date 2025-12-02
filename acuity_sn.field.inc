@@ -1,5 +1,8 @@
 <?php
 
+/**
+ * File: acuity_sn.field.inc
+ */
 function acuity_sn_field_widget_info() {
   return [
     'acuity_sn_widget' => [
@@ -10,7 +13,9 @@ function acuity_sn_field_widget_info() {
   ];
 }
 
-
+/**
+ * Implements hook_field_widget_form().
+ */
 function acuity_sn_field_widget_form($form, &$form_state, $field, $instance, $langcode, $items, $delta, $element) {
   $group_name = $instance['widget']['settings']['group'] ?? '';
   $preview = '';
@@ -35,7 +40,7 @@ function acuity_sn_field_widget_form($form, &$form_state, $field, $instance, $la
   // Main serial number field (read-only)
   $element['value'] = [
     '#type' => 'textfield',
-    '#title' => t('Serial Number'),
+    '#title' => $instance['label'],
     '#default_value' => $preview,
     '#attributes' => ['readonly' => 'readonly', 'style' => 'color: red; font-style: italic;'],
   ];
@@ -53,9 +58,9 @@ function acuity_sn_field_widget_form($form, &$form_state, $field, $instance, $la
   return $element;
 }
 
-
-
-
+/**
+ * Implements hook_field_settings_form().
+ */
 function acuity_sn_field_settings_form($field, $instance, $has_data) {
   $settings = $field['settings']['acuity_sn'] ?? [];
 
@@ -91,4 +96,3 @@ function acuity_sn_field_widget_settings_form($field, $instance) {
 
   return $form;
 }
-

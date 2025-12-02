@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * @file
+ * Acuity Serial Number Generator admin interface.
+ *
+ * file: acuity_sn.admin.inc
+ */
 
 /**
  * Implements hook_help_info().
@@ -8,7 +14,7 @@ function acuity_sn_help_info() {
   return [
     'acuity_sn' => [
       'title' => 'Acuity Serial Number Generator',
-      'path' => 'admin/config/abms/acuity_sn/help',
+      'path' => 'admin/config/acuity-utils/acuity_sn/help',
     ],
   ];
 }
@@ -21,7 +27,7 @@ function acuity_sn_help_section($section) {
     return [
       'acuity_sn' => [
         'title' => 'Acuity Serial Number Generator',
-        'path' => 'admin/config/abms/acuity_sn/help',
+        'path' => 'admin/config/acuity-utils/acuity_sn/help',
       ],
     ];
   }
@@ -60,7 +66,7 @@ function acuity_sn_admin_form($form, &$form_state) {
   if (!empty($groups)) {
     foreach ($groups as $group_id => $group) {
       $rows[] = [
-        l(t('Edit'), "admin/config/abms/acuity_sn/edit/$group_id", [
+        l(t('Edit'), "admin/config/acuity-utils/acuity_sn/edit/$group_id", [
           'attributes' => ['title' => t('Edit @group', ['@group' => $group_id])],
         ]),
         check_plain($group_id),
@@ -69,7 +75,7 @@ function acuity_sn_admin_form($form, &$form_state) {
         check_plain($group['suffix'] ?? ''),
         check_plain($group['padding'] ?? ''),
         check_plain($group['next'] ?? ''),
-        l(t('Delete'), "admin/config/abms/acuity_sn/delete/$group_id", [
+        l(t('Delete'), "admin/config/acuity-utils/acuity_sn/delete/$group_id", [
           'attributes' => ['class' => ['abms-delete-link']],
         ]),
       ];
@@ -83,7 +89,7 @@ function acuity_sn_admin_form($form, &$form_state) {
   $form['groups_wrapper']['add'] = [
     '#type' => 'link',
     '#title' => t('Add new group'),
-    '#href' => 'admin/config/abms/acuity_sn/add',
+    '#href' => 'admin/config/acuity-utils/acuity_sn/add',
     '#attributes' => ['class' => ['button', 'button-action']],
   ];
 
@@ -105,12 +111,12 @@ function acuity_sn_admin_form($form, &$form_state) {
   if (!empty($assignments) && is_array($assignments)) {
     foreach ($assignments as $type => $group) {
       $rows[] = [
-        l(t('Edit'), "admin/config/abms/acuity_sn/edit-title/$type", [
+        l(t('Edit'), "admin/config/acuity-utils/acuity_sn/edit-title/$type", [
           'attributes' => ['title' => t('Edit title assignment for @type', ['@type' => $type])],
         ]),
         check_plain(node_type_get_name($type)),
         check_plain($group),
-        l(t('Remove'), "admin/config/abms/acuity_sn/remove-title/$type", [
+        l(t('Remove'), "admin/config/acuity-utils/acuity_sn/remove-title/$type", [
           'attributes' => ['class' => ['abms-remove-link']],
         ]),
       ];
@@ -128,15 +134,13 @@ function acuity_sn_admin_form($form, &$form_state) {
 
   $form['title_assignments_wrapper']['add'] = [
     '#type' => 'markup',
-    '#markup' => l(t('Assign serial number to title'), 'admin/config/abms/acuity_sn/assign-title', [
+    '#markup' => l(t('Assign serial number to title'), 'admin/config/acuity-utils/acuity_sn/assign-title', [
       'attributes' => ['class' => ['button', 'button-primary']],
     ]),
   ];
 
   return $form;
 }
-
-
 
 /**
  * Form to add or edit a serial number group.
@@ -158,6 +162,7 @@ function acuity_sn_group_form($form, &$form_state, $group_id = NULL) {
     '#default_value' => $group_id,
     '#disabled' => !empty($group_id),
     '#required' => TRUE,
+    '#description' => t('A machine readable field name that must consist of lowercase letters, numbers and underscores but it must start with a character. i.e. "invoice_number", "po_number", "widget_serial".'),
     '#machine_name' => [
       'exists' => function ($id) use ($groups) {
         return isset($groups[$id]);
@@ -170,18 +175,21 @@ function acuity_sn_group_form($form, &$form_state, $group_id = NULL) {
     '#title' => t('Label'),
     '#default_value' => $group['label'] ?? '',
     '#required' => TRUE,
+    '#description' => t('This is the human readable text and field label used on forms and when selecting the widget from the Content Type field settings.'),
   ];
 
   $form['prefix'] = [
     '#type' => 'textfield',
     '#title' => t('Prefix'),
     '#default_value' => $group['prefix'] ?? '',
+    '#description' => t('Automatically added to the beginning of the serial number i.e. "Inv00125".'),
   ];
 
   $form['suffix'] = [
     '#type' => 'textfield',
     '#title' => t('Suffix'),
     '#default_value' => $group['suffix'] ?? '',
+    '#description' => t('Automatically appended to the end of the serial number i.e. "Inv00125pending".'),
   ];
 
   $form['padding'] = [
@@ -189,6 +197,7 @@ function acuity_sn_group_form($form, &$form_state, $group_id = NULL) {
     '#title' => t('Zero Padding'),
     '#default_value' => $group['padding'] ?? 4,
     '#min' => 1,
+    '#description' => t('Zero padding adds a 0 to the left of the serial number i.e. 4 = 0001, 5 = 00001.'),
   ];
 
   $form['next'] = [
@@ -196,6 +205,7 @@ function acuity_sn_group_form($form, &$form_state, $group_id = NULL) {
     '#title' => t('Next Number'),
     '#default_value' => $group['next'] ?? 1,
     '#required' => TRUE,
+    '#description' => t('Next serial number to use. This is also used for the starting number. This should be numeric with no padding i.e. "1".'),
   ];
 
   $form['actions'] = [
@@ -227,7 +237,7 @@ function acuity_sn_group_form_submit($form, &$form_state) {
   $config->setData($groups)->save();
 
   backdrop_set_message(t('Serial number group %id has been saved.', ['%id' => $id]));
-  $form_state['redirect'] = 'admin/config/abms/acuity_sn';
+  $form_state['redirect'] = 'admin/config/acuity-utils/acuity_sn';
 }
 
 /**
@@ -256,7 +266,6 @@ function acuity_sn_group_delete_confirm($form, &$form_state, $group_id = NULL) {
         '</div>',
     ];
 
-
     $rows = [];
     foreach ($usage as $item) {
       $rows[] = [
@@ -273,21 +282,21 @@ function acuity_sn_group_delete_confirm($form, &$form_state, $group_id = NULL) {
         'rows' => $rows,
       ]),
     ];
-      $form['back_link'] = [
-    '#type' => 'markup',
-    '#markup' => '<p>' . l(
-      t('← Back to Serial Number Settings'),
-      'admin/config/abms/acuity_sn',
-      ['attributes' => ['class' => ['button', 'button-secondary']]]
-    ) . '</p>',
-  ];
-}
+    $form['back_link'] = [
+      '#type' => 'markup',
+      '#markup' => '<p>' . l(
+        t('← Back to Serial Number Settings'),
+        'admin/config/acuity-utils/acuity_sn',
+        ['attributes' => ['class' => ['button', 'button-secondary']]]
+      ) . '</p>',
+    ];
+  }
 
   else {
     $form = confirm_form(
       $form,
       t('Are you sure you want to delete the serial number group %id?', ['%id' => $group_id]),
-      'admin/config/abms/acuity_sn',
+      'admin/config/acuity-utils/acuity_sn',
       t('This action cannot be undone.'),
       t('Delete'),
       t('Cancel')
@@ -306,7 +315,7 @@ function acuity_sn_group_delete_confirm_submit($form, &$form_state) {
   // Safety check: is the group still in use?
   if (acuity_sn_group_usage_details($group_id)) {
     backdrop_set_message(t('The group %id is now in use and cannot be deleted.', ['%id' => $group_id]), 'error');
-    $form_state['redirect'] = 'admin/config/abms/acuity_sn';
+    $form_state['redirect'] = 'admin/config/acuity-utils/acuity_sn';
     return;
   }
 
@@ -324,16 +333,15 @@ function acuity_sn_group_delete_confirm_submit($form, &$form_state) {
     backdrop_set_message(t('The group %id was not found.', ['%id' => $group_id]), 'error');
   }
 
-  $form_state['redirect'] = 'admin/config/abms/acuity_sn';
+  $form_state['redirect'] = 'admin/config/acuity-utils/acuity_sn';
 }
-
 
 /**
  * Find all fields using a specific serial number group.
  *
  * @param string $group_id
  * @return array
- *   An array of arrays with keys: entity_type, bundle, field_name.
+ * An array of arrays with keys: entity_type, bundle, field_name.
  */
 function acuity_sn_group_usage_details($group_id) {
   $usage = [];
@@ -377,7 +385,7 @@ function acuity_sn_assign_title_form($form, &$form_state) {
 
   if (empty($available_types)) {
     backdrop_set_message(t('All content types are already assigned.'), 'warning');
-    backdrop_goto('admin/config/abms/acuity_sn');
+    backdrop_goto('admin/config/acuity-utils/acuity_sn');
   }
 
   // Load serial number groups.
@@ -430,15 +438,14 @@ function acuity_sn_assign_title_form_submit($form, &$form_state) {
     '%type' => $content_type,
   ]));
 
-  $form_state['redirect'] = 'admin/config/abms/acuity_sn';
+  $form_state['redirect'] = 'admin/config/acuity-utils/acuity_sn';
 }
-
 
 /**
  * Form to edit a title field serial number assignment.
  *
  * @param string $type
- *   The machine name of the content type.
+ * The machine name of the content type.
  */
 function acuity_sn_edit_title_assignment_form($form, &$form_state, $type) {
   $assignments = config_get('acuity_sn.title_assignment', 'assignments');
@@ -473,16 +480,15 @@ $form['actions'] = [
 $form['actions']['submit'] = [
   '#type' => 'submit',
   '#value' => t('Save assignment'),
-  '#button_type' => 'submit', // Keep this for the blue button
+  '#button_type' => 'submit',
 ];
 
 $form['actions']['cancel'] = [
   '#type' => 'link',
   '#title' => t('Cancel'),
-  '#href' => 'admin/config/abms/acuity_sn',
+  '#href' => 'admin/config/acuity-utils/acuity_sn',
   '#attributes' => ['class' => ['button', 'button-secondary']],
 ];
-
 
   return $form;
 }
@@ -500,7 +506,7 @@ function acuity_sn_edit_title_assignment_form_submit($form, &$form_state) {
   $config->set('assignments', $assignments)->save();
 
   backdrop_set_message(t('The title assignment for %type has been updated.', ['%type' => $type]));
-  $form_state['redirect'] = 'admin/config/abms/acuity_sn';
+  $form_state['redirect'] = 'admin/config/acuity-utils/acuity_sn';
 }
 
 /**
@@ -509,13 +515,13 @@ function acuity_sn_edit_title_assignment_form_submit($form, &$form_state) {
 function acuity_sn_remove_title_assignment_form($form, &$form_state, $content_type = NULL) {
   if (!$content_type) {
     backdrop_set_message(t('Missing content type.'), 'error');
-    backdrop_goto('admin/config/abms/acuity_sn');
+    backdrop_goto('admin/config/acuity-utils/acuity_sn');
   }
 
   $assignments = config_get('acuity_sn.title_assignment', 'assignments');
   if (empty($assignments[$content_type])) {
     backdrop_set_message(t('No title assignment found for %type.', ['%type' => $content_type]), 'error');
-    backdrop_goto('admin/config/abms/acuity_sn');
+    backdrop_goto('admin/config/acuity-utils/acuity_sn');
   }
 
   $form['content_type'] = [
@@ -536,7 +542,7 @@ function acuity_sn_remove_title_assignment_form($form, &$form_state, $content_ty
       '#button_type' => 'submit',
     ],
     'cancel' => [
-      '#markup' => l(t('Cancel'), 'admin/config/abms/acuity_sn', ['attributes' => ['class' => ['button']]]),
+      '#markup' => l(t('Cancel'), 'admin/config/acuity-utils/acuity_sn', ['attributes' => ['class' => ['button']]]),
     ],
   ];
 
@@ -555,5 +561,60 @@ function acuity_sn_remove_title_assignment_form_submit($form, &$form_state) {
   $config->set('assignments', $assignments)->save();
 
   backdrop_set_message(t('Title assignment for %type has been removed.', ['%type' => node_type_get_name($content_type)]));
-  $form_state['redirect'] = 'admin/config/abms/acuity_sn';
+  $form_state['redirect'] = 'admin/config/acuity-utils/acuity_sn';
+}
+
+/**
+ * Help page callback.
+ */
+function acuity_sn_help_page() {
+  $output = '';
+
+  $output .= '<div class="acuity-sn-admin-section">';
+  $output .= '<h3>' . t('About') . '</h3>';
+  $output .= '<p>' . t('The Acuity Serial Number module provides a flexible system for generating atomic, auto-incrementing serial numbers. These numbers can be applied to <strong>Text Fields</strong> or to the <strong>Title</strong> of a content type.') . '</p>';
+  $output .= '</div>';
+
+  $output .= '<div class="acuity-sn-admin-section">';
+  $output .= '<h3>' . t('Configuration') . '</h3>';
+  $output .= '<p>' . t('Visit the admin page at !url', ['!url' => l('admin/config/acuity-utils/acuity_sn', 'admin/config/acuity-utils/acuity_sn')]) . '</p>';
+  $output .= '<p>' . t('Set options for:') . '</p>';
+  $output .= '<ul>';
+  $output .= '<li><strong>' . t('Machine name') . ':</strong> ' . t('A machine readable field name that must consist of lowercase letters, numbers and underscores but it must start with a character. i.e. "invoice_number", "po_number", "widget_serial".') . '</li>';
+  $output .= '<li><strong>' . t('Label') . ':</strong> ' . t('This is the human readable text and field label used on forms and when selecting the widget from the Content Type field settings.') . '</li>';
+  $output .= '<li><strong>' . t('Prefix') . ':</strong> ' . t('Automatically added to the beginning of the serial number i.e. "Inv00125".') . '</li>';
+  $output .= '<li><strong>' . t('Suffix') . ':</strong> ' . t('Automatically appended to the end of the serial number i.e. "Inv00125pending".') . '</li>';
+  $output .= '<li><strong>' . t('Padding') . ':</strong> ' . t('Zero padding adds a 0 to the left of the serial number i.e. 4 = 0001, 5 = 00001.') . '</li>';
+  $output .= '<li><strong>' . t('Next') . ':</strong> ' . t('Next serial number to use. This is also used for the starting number. This should be numeric with no padding i.e. "1".') . '</li>';
+  $output .= '</ul>';
+
+  $output .= '<h3>' . t('Usage') . '</h3>';
+  $output .= '<p>' . t('<strong>How it works:</strong> The serial number field shows the next available serial number on the data entry screen as a <strong>read-only</strong> field. This serial number is just an indication of the next one available when the page was loaded; the system uses the next available atomic number when the content is actually saved to prevent duplicates.') . '</p>';
+  $output .= '<ul>';
+  $output .= '<li>' . t('<strong>Text Fields:</strong> Add/modify a <em>Text (short)</em> field widget to <strong>Auto serial number</strong>.') . '</li>';
+  $output .= '<li>' . t('From the "Serial number group" selection, choose one of the "Serial number groups" created from the settings page.') . '</li>';
+  $output .= '<li>' . t('The Text Processor should be "Plain text".') . '</li>';
+  $output .= '<li>' . t('<strong>Node Titles:</strong> On the settings page, click "Assign serial number to title". Select the content type and the serial group.') . '</li>';
+  $output .= '</ul>';
+
+  $output .= '<h4>' . t('Important Behaviors') . '</h4>';
+  $output .= '<ul>';
+  $output .= '<li><strong>' . t('Permanent Assignment') . ':</strong> ' . t('Serial numbers are designed to be unique and strictly sequential (e.g., for Invoices, Purchase Orders, Batch Numbers). Once a number is assigned to a node, it is permanent. Deleting a node will <strong>not</strong> release that serial number for reuse; the counter will continue from the "Next number" defined in the settings.') . '</li>';
+  $output .= '<li><strong>' . t('Settings are not Retroactive') . ':</strong> ' . t('Changing the settings for a Serial Group (e.g., altering the Prefix or Suffix) will <strong>not</strong> affect existing content. The serial number is saved as plain text in the database. The module only inserts a serial number if the field is empty; if a field already contains data, it will remain unchanged.') . '</li>';
+  $output .= '</ul>';
+
+  $output .= '<h4>' . t('Existing Content') . '</h4>';
+  $output .= '<p>' . t('This module assigns numbers to new content going forward. It does not retroactively generate numbers for existing nodes.') . '</p>';
+  $output .= '<p><strong>' . t('Important:') . '</strong> ' . t('If you are upgrading an existing content type where you previously manually entered serial numbers, changing the widget to "Auto serial number" will make those fields read-only. You will not be able to edit the existing values.') . '</p>';
+  $output .= '<p><strong>' . t('Recommendation:') . '</strong> ' . t('Configure the Serial Number Group\'s "Next number" to be greater than your highest existing manual serial number to avoid conflicts.') . '</p>';
+  $output .= '</div>';
+
+  $output .= '<div class="acuity-sn-admin-section">';
+  $output .= '<h3>' . t('Developer API') . '</h3>';
+  $output .= '<p><strong>' . t('NOTE: The API is a work-in-progress... Please contact the developer before using the API in production.') . '</strong></p>';
+  $output .= '<p>' . t('You can request a serial number programmatically using the following function:') . '</p>';
+  $output .= '<pre><code>$serial = acuity_sn_generate_number(\'repair\');</code></pre>';
+  $output .= '</div>';
+
+  return $output;
 }

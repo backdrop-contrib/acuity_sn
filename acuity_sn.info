@@ -1,14 +1,18 @@
 name = Acuity Serial Number Generator
-description = Stand alone module to provides atomic, auto-incrementing serial number generation widget for text fields and Title field
+description = Generates atomic, auto-incrementing serial numbers. Apply to
+custom Text fields via a widget OR set to automatically populate the Node
+Title of individual content types.
 
 type = module
 backdrop = 1.x
-package = Acuity BMS - Standalone Utilities
+package = Acuity Utilities
+;version = 1.2.0
+
+configure = admin/config/acuity-utils/
 
 maintainers[albancomputers] = Albany Computer Services
 
 stylesheets[all][] = css/acuity_sn.css
-;scripts[] = somescript.js
 
 tags[] = Appearance
 tags[] = Fields
@@ -16,5 +20,3 @@ tags[] = User Interface
 tags[] = Utility
 
 php = 8.0
-
-version = 1.0.7

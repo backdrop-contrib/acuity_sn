@@ -1,13 +1,164 @@
 <?php
 
+/**
+ * @file
+ * Acuity Serial Number module.
+ *
+ * Provides functionality for generating and managing serial numbers
+ * for various entity types in Backdrop CMS.
+ *
+ * file: modules/acuity_sn/acuity_sn.module
+ */
 
-// Include the field/widget logic.
+
+// Include the field/widget logic and API.
 module_load_include('inc', 'acuity_sn', 'acuity_sn.field');
 module_load_include('inc', 'acuity_sn', 'acuity_sn.admin');
 module_load_include('inc', 'acuity_sn', 'acuity_sn.api');
 
 
+/**
+ * Implements hook_menu().
+ */
+function acuity_sn_menu() {
+  $items = [];
 
+  // 1. Define the Parent Container: Acuity Utils
+  // This creates the block page at /admin/config/acuity-utils
+  $items['admin/config/acuity-utils'] = [
+    'title' => 'Acuity Utils',
+    'description' => 'Acuity standalone utilities configuration.',
+    'page callback' => 'system_admin_menu_block_page',
+    'access arguments' => ['access administration pages'],
+    'file' => 'system.admin.inc',
+    'file path' => backdrop_get_path('module', 'system'),
+    'position' => 'right',
+    'weight' => -10,
+  ];
+
+  // 2. The Module Settings Page
+  $items['admin/config/acuity-utils/acuity_sn'] = [
+    'title' => 'Serial Number Settings',
+    'description' => 'Manage serial number formats for the Acuity suite.',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => ['acuity_sn_admin_form'],
+    'access arguments' => ['administer site configuration'],
+    'file' => 'acuity_sn.admin.inc',
+    'weight' => 0,
+  ];
+
+  $items['admin/config/acuity-utils/acuity_sn/add'] = [
+    'title' => 'Add Serial Group',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => ['acuity_sn_group_form'],
+    'access arguments' => ['administer site configuration'],
+    'type' => MENU_CALLBACK,
+    'file' => 'acuity_sn.admin.inc',
+  ];
+
+  $items['admin/config/acuity-utils/acuity_sn/edit/%'] = [
+    'title' => 'Edit Serial Group',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => ['acuity_sn_group_form', 5],
+    'access arguments' => ['administer site configuration'],
+    'type' => MENU_CALLBACK,
+    'file' => 'acuity_sn.admin.inc',
+  ];
+
+  $items['admin/config/acuity-utils/acuity_sn/delete/%'] = [
+    'title' => 'Delete Serial Group',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => ['acuity_sn_group_delete_confirm', 5],
+    'access arguments' => ['administer site configuration'],
+    'type' => MENU_CALLBACK,
+    'file' => 'acuity_sn.admin.inc',
+  ];
+
+  $items['admin/config/acuity-utils/acuity_sn/help'] = [
+    'title' => 'Acuity Serial Number Generator Help',
+    'page callback' => 'acuity_sn_help_page',
+    'type' => MENU_NORMAL_ITEM,
+    'access arguments' => ['administer site configuration'],
+  ];
+
+  $items['admin/config/acuity-utils/acuity_sn/assign-title'] = [
+    'title' => 'Assign serial number to title',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => ['acuity_sn_assign_title_form'],
+    'access arguments' => ['administer site configuration'],
+    'type' => MENU_CALLBACK,
+    'file' => 'acuity_sn.admin.inc',
+  ];
+
+  $items['admin/config/acuity-utils/acuity_sn/edit-title/%'] = [
+    'title' => 'Edit title assignment',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => ['acuity_sn_edit_title_assignment_form', 5],
+    'access arguments' => ['administer site configuration'],
+    'type' => MENU_NORMAL_ITEM,
+  ];
+
+  $items['admin/config/acuity-utils/acuity_sn/remove-title/%'] = [
+    'title' => 'Remove title assignment',
+    'page callback' => 'backdrop_get_form',
+    'page arguments' => ['acuity_sn_remove_title_assignment_form', 5],
+    'access arguments' => ['administer site configuration'],
+    'type' => MENU_CALLBACK,
+  ];
+
+  return $items;
+}
+
+/**
+ * Implements hook_form_alter().
+ *
+ * Configures the Title field to show a preview of the serial number
+ * if the content type is assigned to a serial group.
+ */
+function acuity_sn_form_alter(&$form, &$form_state, $form_id) {
+  // Check if this is a node form.
+  if (isset($form['#node']) && isset($form['title']) && $form['#node']->type) {
+    $node = $form['#node'];
+    $is_new = empty($node->nid);
+
+    // Load title assignments from config.
+    $assignments = config_get('acuity_sn.title_assignment', 'assignments');
+
+    // If the current node type is in the assignment list.
+    if (!empty($assignments[$node->type])) {
+      $group_id = $assignments[$node->type];
+
+      // Remove the required marker since we are automating it.
+      $form['title']['#required'] = FALSE;
+
+      if ($is_new) {
+        // Calculate the preview value.
+        $preview = '';
+        $config = config('acuity_sn.serials');
+        $all = $config->get();
+
+        if (isset($all[$group_id])) {
+          $next = acuity_sn_peek_next_number($group_id);
+          $preview = acuity_sn_format_number($all[$group_id], $next);
+        }
+
+        // Set the preview as default value and make it read-only.
+        $form['title']['#default_value'] = $preview;
+        $form['title']['#attributes']['readonly'] = 'readonly';
+        // Add visual style for "read-only/auto" feel.
+        $form['title']['#attributes']['style'] = 'color: red; font-style: italic;';
+
+        $form['title']['#description'] = '<span class="abms-sn-provisional-msg">' .
+          t('This is a provisional number and may change if other content is saved first.') .
+          '</span>';
+      }
+      else {
+        // On edit, we keep the existing title.
+        $form['title']['#description'] = t('Assigned Serial Group: @group', ['@group' => $group_id]);
+      }
+    }
+  }
+}
 
 /**
  * Implements hook_entity_presave().
@@ -18,26 +169,48 @@ function acuity_sn_entity_presave($entity, $entity_type) {
     return;
   }
 
-  // Title injection for nodes (only when configured).
+  // 1. Title injection for nodes.
   if ($entity_type === 'node') {
     $title_map = config_get('acuity_sn.title_assignment', 'assignments');
-    if (!empty($title_map[$entity->type]) && empty($entity->title)) {
-      $group_name = $title_map[$entity->type];
-      $entity->title = acuity_sn_generate_number($group_name);
+
+    // Check if this node type is assigned a serial group.
+    if (!empty($title_map[$entity->type])) {
+
+      $is_new = isset($entity->is_new) ? $entity->is_new : (empty($entity->nid));
+
+      // If it is new, we ALWAYS overwrite the title with a fresh serial number.
+      // This ensures that the "Preview" value seen in the form is replaced
+      // by a strictly locked, atomic serial number.
+      if ($is_new) {
+        $group_name = $title_map[$entity->type];
+        $new_sn = acuity_sn_generate_number($group_name);
+        if ($new_sn) {
+          $entity->title = $new_sn;
+        }
+      }
+      // Fallback: If for some reason it's not new but the title is empty.
+      // Note: titles should never be empty on existing nodes, but just in case.
+      elseif (empty($entity->title)) {
+        $group_name = $title_map[$entity->type];
+        $new_sn = acuity_sn_generate_number($group_name);
+        if ($new_sn) {
+          $entity->title = $new_sn;
+        }
+      }
     }
   }
 
-  // Field injection for any entity using the acuity_sn_widget.
-  foreach (field_info_instances($entity_type, $entity->type) as $field_name => $instance) {
-
+  // 2. Field injection for acuity_sn_widget.
+  $instances = field_info_instances($entity_type, $entity->type);
+  foreach ($instances as $field_name => $instance) {
     $field = field_info_field($field_name);
 
-    if ($field['type'] === 'text' && $instance['widget']['type'] === 'acuity_sn_widget') {
+    if ($field['type'] === 'text' && isset($instance['widget']['type']) && $instance['widget']['type'] === 'acuity_sn_widget') {
       $lang = LANGUAGE_NONE;
       $group_name = $instance['widget']['settings']['group'] ?? '';
 
-      // Check if it's a new entity. Use is_new() if available, fallback otherwise.
-      $is_new = method_exists($entity, 'is_new') ? $entity->is_new() : (empty($entity->nid) && empty($entity->id));
+      // Check if it's a new entity.
+      $is_new = isset($entity->is_new) ? $entity->is_new : (empty($entity->nid) && empty($entity->id));
 
       if ($is_new && !empty($group_name)) {
         $value = acuity_sn_generate_number($group_name);
@@ -45,20 +218,22 @@ function acuity_sn_entity_presave($entity, $entity_type) {
           $entity->{$field_name}[$lang][0]['value'] = $value;
         }
       }
-      // Otherwise, restore value from hidden field to avoid data loss
+      // Restore from hidden field if editing and preserve data exists
       elseif (isset($_POST[$field_name]['preserve'])) {
-        $entity->{$field_name}[$lang][0]['value'] = $_POST[$field_name]['preserve'];
+        if (empty($entity->{$field_name}[$lang][0]['value'])) {
+           $entity->{$field_name}[$lang][0]['value'] = $_POST[$field_name]['preserve'];
+        }
       }
     }
   }
 }
 
-
-
-
-
 /**
  * Generate the next sequence number for a group.
+ * * @param string $group
+ * The machine name of the serial group.
+ * @return string|null
+ * The formatted serial number or NULL on failure.
  */
 function acuity_sn_generate_number($group) {
   $lock_name = 'acuity_sn_' . $group;
@@ -78,13 +253,18 @@ function acuity_sn_generate_number($group) {
   }
 
   $group_data = $all[$group];
-  $next = max($group_data['next'], $group_data['min']);
+  // Ensure min exists if not set
+  $min = $group_data['min'] ?? 1;
+  $next = max($group_data['next'], $min);
+
   $formatted = $group_data['prefix']
              . str_pad($next, $group_data['padding'], '0', STR_PAD_LEFT)
              . $group_data['suffix'];
 
   $group_data['next'] = $next + 1;
   $all[$group] = $group_data;
+
+  // Save config
   $config->setData($all)->save();
 
   lock_release($lock_name);
@@ -92,81 +272,8 @@ function acuity_sn_generate_number($group) {
 }
 
 /**
- * Implements hook_menu().
+ * Helper: Peek at the next number (for previews).
  */
-function acuity_sn_menu() {
-$items = [];
-
-  $items['admin/config/abms/acuity_sn'] = [
-    'title' => 'Serial Number Settings',
-    'description' => 'Manage serial number formats for the ABMS suite.',
-    'page callback' => 'backdrop_get_form',
-    'page arguments' => ['acuity_sn_admin_form'],
-    'access arguments' => ['administer site configuration'],
-    'file' => 'acuity_sn.admin.inc',
-  ];
-
-  $items['admin/config/abms/acuity_sn/add'] = [
-    'title' => 'Add Serial Group',
-    'page callback' => 'backdrop_get_form',
-    'page arguments' => ['acuity_sn_group_form'],
-    'access arguments' => ['administer site configuration'],
-    'type' => MENU_CALLBACK,
-    'file' => 'acuity_sn.admin.inc',
-  ];
-
-  $items['admin/config/abms/acuity_sn/edit/%'] = [
-    'title' => 'Edit Serial Group',
-    'page callback' => 'backdrop_get_form',
-    'page arguments' => ['acuity_sn_group_form', 5],
-    'access arguments' => ['administer site configuration'],
-    'type' => MENU_CALLBACK,
-    'file' => 'acuity_sn.admin.inc',
-  ];
-
-  $items['admin/config/abms/acuity_sn/delete/%'] = [
-    'title' => 'Delete Serial Group',
-    'page callback' => 'backdrop_get_form',
-    'page arguments' => ['acuity_sn_group_delete_confirm', 5],
-    'access arguments' => ['administer site configuration'],
-    'type' => MENU_CALLBACK,
-    'file' => 'acuity_sn.admin.inc',
-  ];
-
-  $items['admin/config/abms/acuity_sn/help'] = [
-    'title' => 'Acuity Serial Number Generator Help',
-    'page callback' => 'acuity_sn_help_page',
-    'type' => MENU_NORMAL_ITEM,
-    'access arguments' => ['administer site configuration'],
-  ];
-
-  $items['admin/config/abms/acuity_sn/assign-title'] = [
-    'title' => 'Assign serial number to title',
-    'page callback' => 'backdrop_get_form',
-    'page arguments' => ['acuity_sn_assign_title_form'],
-    'access arguments' => ['administer site configuration'],
-    'type' => MENU_NORMAL_ITEM,
-  ];
-
-  $items['admin/config/abms/acuity_sn/edit-title/%'] = [
-    'title' => 'Edit title assignment',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => ['acuity_sn_edit_title_assignment_form', 5],
-    'access arguments' => ['administer site configuration'],
-    'type' => MENU_NORMAL_ITEM,
-  ];
-
-  $items['admin/config/abms/acuity_sn/remove-title/%'] = [
-    'title' => 'Remove title assignment',
-    'page callback' => 'backdrop_get_form',
-    'page arguments' => ['acuity_sn_remove_title_assignment_form', 5],
-    'access arguments' => ['administer site configuration'],
-    'type' => MENU_CALLBACK,
-   ];
-
-  return $items;
-}
-
 function acuity_sn_peek_next_number($group) {
   $config = config('acuity_sn.serials');
   $all = $config->get();
@@ -175,34 +282,47 @@ function acuity_sn_peek_next_number($group) {
   }
 
   $group_data = $all[$group];
-  return max($group_data['next'], $group_data['min']);
+  $min = $group_data['min'] ?? 1;
+  return max($group_data['next'], $min);
 }
 
+/**
+ * Helper: Format a number based on group settings.
+ */
 function acuity_sn_format_number($group_data, $number) {
   return $group_data['prefix']
        . str_pad($number, $group_data['padding'], '0', STR_PAD_LEFT)
        . $group_data['suffix'];
 }
 
-
 /**
- * Implements hook_form_alter().
- *
- * Disables the required flag on title fields for content types
- * that are configured to receive serial numbers via title assignment.
+ * Implements hook_modules_enabled().
+ * * Auto-discover serial groups from other modules when they are enabled.
  */
-function acuity_sn_form_alter(&$form, &$form_state, $form_id) {
-  // Check if this is a node form.
-  if (isset($form['#node']) && isset($form['title'])) {
-    $node = $form['#node'];
-
-    // Load title assignments from config.
-    $assignments = config_get('acuity_sn.title_assignment', 'assignments');
-
-    // If the current node type is in the assignment list, unset the required flag.
-    if (!empty($assignments[$node->type])) {
-      $form['title']['#required'] = FALSE;
-    }
-  }
+function acuity_sn_modules_enabled($modules) {
+  acuity_sn_register_discovered_groups();
 }
 
+/**
+ * Implements hook_modules_installed().
+ * * For Backdrop compatibility ensures discovery runs on install too.
+ */
+function acuity_sn_modules_installed($modules) {
+  acuity_sn_register_discovered_groups();
+}
+
+/**
+ * Implements hook_config_info().
+ * * Declares configuration files so they can be exported/imported.
+ */
+function acuity_sn_config_info() {
+  $prefixes['acuity_sn.serials'] = [
+    'label' => t('Acuity Serial Number Settings'),
+    'group' => t('Configuration'),
+  ];
+  $prefixes['acuity_sn.title_assignment'] = [
+    'label' => t('Acuity Serial Number Title Assignments'),
+    'group' => t('Configuration'),
+  ];
+  return $prefixes;
+}

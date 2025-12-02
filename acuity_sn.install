@@ -1,5 +1,11 @@
 <?php
 
+/**
+ * Implements hook_install().
+ *
+ * file: modules/acuity_sn/acuity_sn.install
+ */
+
 function acuity_sn_install() {
   config('acuity_sn.serials')->set('test', [
     'label' => 'Serial test',
