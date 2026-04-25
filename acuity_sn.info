@@ -4,7 +4,6 @@ description = Generates atomic, auto-incrementing serial numbers. Apply to custo
 type = module
 backdrop = 1.x
 package = Acuity Utilities
-;version = 1.2.2
 
 configure = admin/config/acuity-utils/
 

@@ -79,6 +79,7 @@ function acuity_sn_menu() {
     'page callback' => 'acuity_sn_help_page',
     'type' => MENU_NORMAL_ITEM,
     'access arguments' => ['administer site configuration'],
+    'file' => 'acuity_sn.admin.inc',
   ];
 
   $items['admin/config/acuity-utils/acuity_sn/assign-title'] = [
